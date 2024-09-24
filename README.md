@@ -217,6 +217,8 @@ plot_juliaset(40, 0.001, -.16+1.04j)
 # 1-p: population percentage of prayer
 # r: population growth
 def logistic_map(r, p):
+    r = np.float64(r)
+    p = np.float64(p)
     return r*p*(1-p)
 ```
 
@@ -286,27 +288,29 @@ plot_growth_over_t(2.2, 20)
 
 ```python
 def determine_equilibrium(ps: np.ndarray):
-    # check for one equilibrium
-    if np.isclose(ps.max()-ps.min(), [0]):
-        #print("one equilibrium")
-        return [ps.mean()]
     
     # check for two equilibriums
-    if np.allclose(ps[2:], ps[:-2]):
+    if np.allclose(ps[2:], ps[:-2], atol=1e-3, rtol=1e-3):
         #print("two equilibrium")
         return ps[-2:]
     
     # check for three equilibriums
-    if np.allclose(ps[3:], ps[:-3]):
+    if np.allclose(ps[3:], ps[:-3], atol=1e-3, rtol=1e-3):
         #print("three equilibrium")
         return ps[-3:]
     
-    # check for three equilibriums
-    if np.allclose(ps[4:], ps[:-4]):
+    # check for four equilibriums
+    if np.allclose(ps[4:], ps[:-4], atol=1e-3, rtol=1e-3):
         #print("four equilibrium")
         return ps[-4:]
     
-    return []
+    # check for four equilibriums
+    if np.allclose(ps[5:], ps[:-5], atol=1e-3, rtol=1e-3):
+        #print("four equilibrium")
+        return ps[-5:]
+    
+    # return equilibrium
+    return [ps[-1]]
     
 determine_equilibrium(np.array([0.5,1,1.5,0.5,1,1.5,0.5]))
 ```
@@ -322,42 +326,32 @@ determine_equilibrium(np.array([0.5,1,1.5,0.5,1,1.5,0.5]))
 ```python
 p_init = .5
 years = 50
+r_end = 5
+
+err_setting = np.seterr(over='ignore', invalid='ignore')
 
 # alter the point density for the interesting regions
-rs = np.concatenate([np.arange(0, 3, 0.01), np.arange(3, 3.5, 0.001)])
+rs = np.concatenate([np.arange(0, 1, 0.05), np.arange(1, 3, 0.01), np.arange(3, r_end, 0.0005)])
+
+fig = plt.figure(figsize=(15,10))
+plt.title(f"Bifurcation Diagram (initial p={p_init})")
+plt.xlabel("r - Value")
+plt.ylabel("Equilibrium")
 
 for r in rs:
     ps = run_logitsic_map(r, p_init, years)
 
     equ = determine_equilibrium(ps[-10:])
 
-    if r == 1:
-        print(ps)
-        print(equ)
-
-    if len(equ) != 0:
-        plt.scatter(np.repeat(r, len(equ)), equ, color="r", marker=".")
+    plt.scatter(np.repeat(r, len(equ)), equ, color=colormaps["plasma"](r/r_end), marker=".")
 ```
-
-    [0.5        0.25       0.1875     0.15234375 0.12913513 0.11245925
-     0.09981217 0.0898497  0.08177673 0.0750893  0.06945089 0.06462747
-     0.06045076 0.05679646 0.05357063 0.05070081 0.04813024 0.04581372
-     0.04371482 0.04180384 0.04005628 0.03845177 0.03697323 0.03560621
-     0.03433841 0.03315928 0.03205975 0.03103192 0.03006894 0.0291648
-     0.02831421 0.02751252 0.02675558 0.02603972 0.02536165 0.02471844
-     0.02410744 0.02352627 0.02297278 0.02244503 0.02194125 0.02145984
-     0.02099931 0.02055834 0.02013569 0.01973025 0.01934097 0.01896689
-     0.01860715 0.01826092 0.01792746]
-    []
-
 
 
     
-![png](mandelbrot-generation_files/mandelbrot-generation_24_1.png)
+![png](mandelbrot-generation_files/mandelbrot-generation_24_0.png)
     
 
 
+## Feigenbaum Constant
 
-```python
 
-```
