@@ -1,5 +1,11 @@
 # An Exploration of the Mandelbrot-Set, Julia-Set and the chaotic Bifurcation
 
+In this notebook, I explore the field of fractals and chatotic theory by implementing and recreating the well-known graphs.
+
+[This aricle](https://medium.com/science-spectrum/my-friend-benoit-mandelbrot-7d7e45dd6f70) got fluhed into my medium feed. I knew nothing about the graceful and also kind of strange fractals. But they caught my interest and eventially initiated me to learn more about it. 
+
+[This video](https://www.youtube.com/watch?v=ovJcsL7vyrk) by Veritasium and [this video](https://www.youtube.com/watch?v=FFftmWSzgmk) from Numberphile show the beauty of the Mandelbrot setand its connection to the Julia set and the Feigenbaum constant.
+
 
 ```python
 import numpy as np
@@ -8,6 +14,8 @@ from matplotlib import colormaps
 ```
 
 ## Naive Implementation
+
+This was my first, naive implementation of the Mandelbrot set which calculates the set in an iterative manner.
 
 
 ```python
@@ -61,14 +69,17 @@ plot_mandelbrot()
 
 
     
-![png](mandelbrot-generation_files/mandelbrot-generation_4_0.png)
+![png](mandelbrot-generation_files/mandelbrot-generation_6_0.png)
     
 
 
 ## Matrix-wise Implementation
 
+This is a refined implementation which exploits the efficient matrix operations and is therefore much faster than the previous one.
+
 
 ```python
+# Define the bounds of the diagram
 R_UPPER = .5
 R_LOWER = -2
 I_UPPER = 1.3
@@ -122,11 +133,11 @@ plot_mandelbrot(20, 0.0005)
 
 
     
-![png](mandelbrot-generation_files/mandelbrot-generation_9_0.png)
+![png](mandelbrot-generation_files/mandelbrot-generation_12_0.png)
     
 
 
-You can alter the colormap! An Overview of availible maps can you find [here](https://matplotlib.org/stable/users/explain/colors/colormaps.html)
+You can alter the colormap to generate cool images! An Overview of availible maps can you find [here](https://matplotlib.org/stable/users/explain/colors/colormaps.html)
 
 
 ```python
@@ -147,7 +158,7 @@ plot_mandelbrot(20, 0.005, "afmhot")
 
 
     
-![png](mandelbrot-generation_files/mandelbrot-generation_12_0.png)
+![png](mandelbrot-generation_files/mandelbrot-generation_15_0.png)
     
 
 
@@ -193,7 +204,7 @@ plot_juliaset(40, 0.001, .3-.01j)
 
 
     
-![png](mandelbrot-generation_files/mandelbrot-generation_16_0.png)
+![png](mandelbrot-generation_files/mandelbrot-generation_19_0.png)
     
 
 
@@ -204,7 +215,7 @@ plot_juliaset(40, 0.001, -.16+1.04j)
 
 
     
-![png](mandelbrot-generation_files/mandelbrot-generation_17_0.png)
+![png](mandelbrot-generation_files/mandelbrot-generation_20_0.png)
     
 
 
@@ -216,16 +227,53 @@ plot_juliaset(40, 0.001, -.16+1.04j)
 # p: population percentage
 # 1-p: population percentage of prayer
 # r: population growth
-def logistic_map(r, p):
-    r = np.float64(r)
-    p = np.float64(p)
+def logistic_map(p, r):
     return r*p*(1-p)
+
+def gaussian(x, r):
+    return np.exp(4. * -x**2) + r
+
+# helper function to run f multiple times
+def run_func(f, x, years, *args):
+    #print(args)
+    ys = [x]
+    for _ in range(years):
+        x = f(x, args)
+        #print(x.shape)
+        ys.append(x)
+        #print(ys)
+
+    return np.stack(ys, axis=0)
 ```
 
 
 ```python
+x = np.arange(-2, 2, 0.01)
+y = gaussian(x, 1)
+
+plt.plot(x, y)
+plt.xlabel("x")
+plt.ylabel("y")
+plt.title("Gaussian")
+```
+
+
+
+
+    Text(0.5, 1.0, 'Gaussian')
+
+
+
+
+    
+![png](mandelbrot-generation_files/mandelbrot-generation_23_1.png)
+    
+
+
+
+```python
 p = np.arange(0, 1, 0.01)
-pn = logistic_map(2, p)
+pn = logistic_map(p, 2)
 
 plt.plot(p, pn)
 plt.xlabel("population")
@@ -242,46 +290,51 @@ plt.title("Relation of population")
 
 
     
-![png](mandelbrot-generation_files/mandelbrot-generation_20_1.png)
+![png](mandelbrot-generation_files/mandelbrot-generation_24_1.png)
     
 
 
 
 ```python
-def run_logitsic_map(r, p, years):
-    ps = [p]
-    for _ in range(years):
-        p = logistic_map(r, p)
-        ps.append(p)
+def plot_growth_over_t(f, years, *args):
+    x = np.arange(0,1, 0.001)[1:]
+    ys = run_func(f, x, years, *args)
 
-    return np.stack(ps, axis=0)
+    equilibrium = ys[-1,:].mean()
 
-def plot_growth_over_t(r, years):
-    p = np.arange(0,1, 0.001)[1:]
-
-    ps = run_logitsic_map(r, p, years)
-
-    equilibrium = ps[-1,:].mean()
-
-    for p in ps.T:
-        plt.plot(p, color="r", alpha=.1)
+    for y in ys.T:
+        plt.plot(y, color="r", alpha=.1)
 
     plt.hlines(equilibrium, 0, 10, label=f"Equilibrium: {round(equilibrium, 4)}")
 
-    plt.title(f"Population growth for {years} years")
+    plt.title(f"Equlibrium approach for {years} years")
     plt.xlabel("Year")
-    plt.ylabel("population")
+    plt.ylabel("x-value")
     plt.legend()
+
 ```
 
 
 ```python
-plot_growth_over_t(2.2, 20)
+r = 2.2
+plot_growth_over_t(logistic_map, 20, r)
 ```
 
 
     
-![png](mandelbrot-generation_files/mandelbrot-generation_22_0.png)
+![png](mandelbrot-generation_files/mandelbrot-generation_26_0.png)
+    
+
+
+
+```python
+r = 1
+plot_growth_over_t(gaussian, 20, r)
+```
+
+
+    
+![png](mandelbrot-generation_files/mandelbrot-generation_27_0.png)
     
 
 
@@ -290,22 +343,22 @@ plot_growth_over_t(2.2, 20)
 def determine_equilibrium(ps: np.ndarray):
     
     # check for two equilibriums
-    if np.allclose(ps[2:], ps[:-2], atol=1e-3, rtol=1e-3):
+    if np.allclose(ps[2:], ps[:-2], atol=1e-3, rtol=1e-3): # set an equality boundary
         #print("two equilibrium")
         return ps[-2:]
     
     # check for three equilibriums
-    if np.allclose(ps[3:], ps[:-3], atol=1e-3, rtol=1e-3):
+    if np.allclose(ps[3:], ps[:-3], atol=1e-3, rtol=1e-3): # set an equality boundary
         #print("three equilibrium")
         return ps[-3:]
     
     # check for four equilibriums
-    if np.allclose(ps[4:], ps[:-4], atol=1e-3, rtol=1e-3):
+    if np.allclose(ps[4:], ps[:-4], atol=1e-3, rtol=1e-3): # set an equality boundary
         #print("four equilibrium")
         return ps[-4:]
     
     # check for four equilibriums
-    if np.allclose(ps[5:], ps[:-5], atol=1e-3, rtol=1e-3):
+    if np.allclose(ps[5:], ps[:-5], atol=1e-3, rtol=1e-3): # set an equality boundary
         #print("four equilibrium")
         return ps[-5:]
     
@@ -324,34 +377,50 @@ determine_equilibrium(np.array([0.5,1,1.5,0.5,1,1.5,0.5]))
 
 
 ```python
-p_init = .5
-years = 50
-r_end = 5
+def plot_bifurcation(f, f_name, rs, years=50, x_init=.5):
+    err_setting = np.seterr(over='ignore', invalid='ignore')
 
-err_setting = np.seterr(over='ignore', invalid='ignore')
+    r_end = rs[-1]
 
+    fig = plt.figure(figsize=(15,10))
+    plt.title(f"{f_name} Bifurcation Diagram (initial p={x_init})")
+    plt.xlabel("r - Value")
+    plt.ylabel("Equilibrium")
+
+    for r in rs:
+        xs = run_func(f, np.array([x_init]), years, r)
+
+        equ = determine_equilibrium(xs[-10:])
+
+        plt.scatter(np.repeat(r, len(equ)), equ, [3] * len(equ), color="black", marker=".")
+
+```
+
+
+```python
 # alter the point density for the interesting regions
-rs = np.concatenate([np.arange(0, 1, 0.05), np.arange(1, 3, 0.01), np.arange(3, r_end, 0.0005)])
+rs = np.concatenate([np.arange(0, 1, 0.05), np.arange(1, 2.8, 0.05), np.arange(2.8, 4, 0.00005)])
 
-fig = plt.figure(figsize=(15,10))
-plt.title(f"Bifurcation Diagram (initial p={p_init})")
-plt.xlabel("r - Value")
-plt.ylabel("Equilibrium")
-
-for r in rs:
-    ps = run_logitsic_map(r, p_init, years)
-
-    equ = determine_equilibrium(ps[-10:])
-
-    plt.scatter(np.repeat(r, len(equ)), equ, color=colormaps["plasma"](r/r_end), marker=".")
+plot_bifurcation(logistic_map, "Logistic Map", rs)
 ```
 
 
     
-![png](mandelbrot-generation_files/mandelbrot-generation_24_0.png)
+![png](mandelbrot-generation_files/mandelbrot-generation_30_0.png)
     
 
 
-## Feigenbaum Constant
+
+```python
+rs = np.concatenate([np.arange(-1, 1, 0.0005)])
+
+plot_bifurcation(gaussian, "Gaussian", rs)
+```
+
+
+    
+![png](mandelbrot-generation_files/mandelbrot-generation_31_0.png)
+    
+
 
 
